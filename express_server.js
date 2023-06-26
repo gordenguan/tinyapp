@@ -29,6 +29,12 @@ app.post('/urls', (req, res) => {
   res.redirect('/urls/' + shortURL);
 });
 
+app.post("/urls/:shortURL", (req, res) => {
+  urlDatabase[req.params.shortURL] = req.body.newLongURL;
+  res.redirect("/urls");
+});
+
+
 app.get('/urls/new', (req, res) => {
   res.render('urls_new');
 });

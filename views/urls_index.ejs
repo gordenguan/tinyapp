@@ -24,6 +24,7 @@
           <tr>
             <th scope="col">Short URL ID</th>
             <th scope="col">Long URL</th>
+            <th scope="col">Edit</th>
             <th scope="col">Delete</th>
           </tr>
         </thead>
@@ -32,10 +33,12 @@
             <tr>
               <td><%= id %></td>
               <td><%= urls[id] %></td>
+              <!-- add Edit button that has a link goes to show page -->
+              <td><a href="/urls/<%= id %>" class="btn btn-primary">Edit</a></td>
                <!-- Add delete buttons to each URL object -->
               <td><form method="POST" action="urls/<%= id %>/delete">
                 <!-- forms only support GET and POST -->
-                <button type="submit">Delete</button> 
+                <button type="submit" class="btn btn-danger">Delete</button> 
                 <!-- three types of buttons: submit, reset and button. -->
               </form></td>
             </tr>
