@@ -20,8 +20,11 @@ app.get('/', (req, res) => {
   res.send('Hello!');
 });
 
+app.get('/register', (req, res) => {
+  res.render('urls_registration')
+})
+
 app.get('/urls', (req, res) => {
-  console.log(req.cookies);
   const templateVars = {
     urls: urlDatabase,
     username: req.cookies.username
