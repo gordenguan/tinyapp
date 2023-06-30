@@ -35,6 +35,10 @@ app.get('/', (req, res) => {
   res.send('Hello!');
 });
 
+app.get('/login', (req, res) => {
+  res.render('urls_login')
+})
+
 app.get('/register', (req, res) => {
   res.render('urls_registration');
 });
@@ -54,8 +58,6 @@ app.post('/register', (req, res) => {
   if (password === '') {
     return res.status(400).send('Please enter valid password')
   }
-  // console.log(users)
-
   // If someone tries to register with an email that is already in the users object, send back a response with the 400 status code
   // create helper.js and import to current file 
   const userCheck = getUserByEmail(users, email);
@@ -84,7 +86,7 @@ app.get('/urls', (req, res) => {
     urls: urlDatabase,
     user: users[req.cookies.user_id] // Pass the entire user object to templateVars
   };
-  res.render('urls_index', templateVars); // Update the _header partial to show the email property from the user object instead of the username
+  res.render('urls_index', templateVars);
 });
 
 app.post('/login', (req, res) => {
