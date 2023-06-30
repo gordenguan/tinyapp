@@ -2,6 +2,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = 8080;    //default port 8080
+const { getUserByEmail } = require('./email_lookup')
 
 function generateRandomString() {
   return Math.random().toString(36).substring(2, 8);
@@ -40,12 +41,27 @@ app.get('/register', (req, res) => {
 
 // Create a POST /register endpoint
 // This endpoint should add a new user object to the users database
-
-
 app.post('/register', (req, res) => {
-
   const email = req.body.email;
+  console.log(email)
   const password = req.body.password;
+
+  // handle error
+  // If the e-mail or password are empty strings, send back a response with the 400 status code
+  if (email === '') {
+    return res.status(400).send('Please enter valid email')
+  }
+  if (password === '') {
+    return res.status(400).send('Please enter valid password')
+  }
+  // console.log(users)
+
+  // If someone tries to register with an email that is already in the users object, send back a response with the 400 status code
+  // create helper.js and import to current file 
+  const userCheck = getUserByEmail(users, email);
+  if (!userCheck) {
+    return res.status(400).send('Email already exist')
+  }
 
   // create a new user:
   let userId = generateRandomString();
@@ -60,22 +76,16 @@ app.post('/register', (req, res) => {
   // set a user_id cookie
   res.cookie('user_id', userId);
 
-  //test by by checking the cookie in browser dev too and using console.log to check if user is added
-  console.log(users);
   res.redirect("/urls");
 });
 
 app.get('/urls', (req, res) => {
-  // Update all endpoints that currently pass a username value to the templates to pass the entire user object to the template instead
-  console.log(req.cookies);
   const templateVars = {
     urls: urlDatabase,
-    user: users[req.cookies.user_id] // Pass the entire user object to your templates via templateVars
+    user: users[req.cookies.user_id] // Pass the entire user object to templateVars
   };
   res.render('urls_index', templateVars); // Update the _header partial to show the email property from the user object instead of the username
 });
-
-// change all username variables in your code
 
 app.post('/login', (req, res) => {
   res.cookie('user_id', req.body.username);
