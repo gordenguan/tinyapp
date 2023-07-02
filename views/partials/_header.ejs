@@ -9,10 +9,16 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-        <div style="margin-left: 888">
-            <!-- add link to register and login -->
+        <div style="margin-left: 700">
+          <!-- add link to register and login -->
+          <% if (!user) { %>
             <a class="btn btn-success" href="/login" role="button">Login</a>
-            <a class="btn btn-success" href="/register" role="button">Logout</a>
+            <% } else { %>
+              <p>Logged in as <%= user.email %>
+              </p>
+              <a class="btn btn-success" href="/login" role="button">Logout</a>
+              <% } %>
+                <a class="btn btn-success" href="/register" role="button">Register</a>
         </div>
       </div>
     </div>

@@ -2,7 +2,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = 8080;    //default port 8080
-const { getUserByEmail } = require('./email_lookup')
+const { getUserByEmail } = require('./email_lookup');
 
 function generateRandomString() {
   return Math.random().toString(36).substring(2, 8);
@@ -36,33 +36,28 @@ app.get('/', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  res.render('urls_login')
-})
+  res.render('urls_login');
+});
 
 app.get('/register', (req, res) => {
   res.render('urls_registration');
 });
 
-// Create a POST /register endpoint
-// This endpoint should add a new user object to the users database
 app.post('/register', (req, res) => {
   const email = req.body.email;
-  console.log(email)
   const password = req.body.password;
 
   // handle error
-  // If the e-mail or password are empty strings, send back a response with the 400 status code
   if (email === '') {
-    return res.status(400).send('Please enter valid email')
+    return res.status(400).send('Please enter valid email');
   }
   if (password === '') {
-    return res.status(400).send('Please enter valid password')
+    return res.status(400).send('Please enter valid password');
   }
-  // If someone tries to register with an email that is already in the users object, send back a response with the 400 status code
   // create helper.js and import to current file 
   const userCheck = getUserByEmail(users, email);
-  if (!userCheck) {
-    return res.status(400).send('Email already exist')
+  if (userCheck) {
+    return res.status(400).send('Email already exist');
   }
 
   // create a new user:
@@ -90,13 +85,32 @@ app.get('/urls', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  res.cookie('user_id', req.body.username);
+  const email = req.body.email;
+  const password = req.body.password;
+
+  const user = getUserByEmail(users, email);
+
+  if (email === '') {
+    return res.status(400).send('Please enter valid email');
+  }
+  if (password === '') {
+    return res.status(400).send('Please enter valid password');
+  }
+  if (!user) {
+    return res.status(403).send('Please enter valid email');
+  }
+
+  if (user.password !== password) {
+    return res.status(403).send('Please enter valid password');
+  }
+  res.cookie('user_id', user.id);
+
   res.redirect("/urls");
 });
 
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 app.post('/urls', (req, res) => {
