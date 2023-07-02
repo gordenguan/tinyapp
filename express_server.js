@@ -36,11 +36,17 @@ app.get('/', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  res.render('urls_login');
+  if (!req.cookies.user_id) {
+    res.render('urls_login');
+  }
+  res.redirect('/urls');
 });
 
 app.get('/register', (req, res) => {
-  res.render('urls_registration');
+  if (!req.cookies.user_id) {
+    res.render('urls_registration');
+  }
+  res.redirect('/urls');
 });
 
 app.post('/register', (req, res) => {
@@ -81,6 +87,9 @@ app.get('/urls', (req, res) => {
     urls: urlDatabase,
     user: users[req.cookies.user_id] // Pass the entire user object to templateVars
   };
+  if (!req.cookies.user_id) {
+    res.redirect('/login');
+  }
   res.render('urls_index', templateVars);
 });
 
@@ -116,6 +125,9 @@ app.post('/logout', (req, res) => {
 app.post('/urls', (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
+  if (!req.cookies.user_id) {
+    res.redirect('/login');
+  }
   res.redirect('/urls/' + shortURL);
 });
 
@@ -131,25 +143,25 @@ app.get('/urls/new', (req, res) => {
 
 
 app.get('/urls/:id', (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = {
+    id: req.params.id,
+    longURL: urlDatabase[req.params.id],
+    user: users[req.cookies.user_id]
+  };
   res.render('urls_show', templateVars);
 });
 
-// app.get("/u/:shortURL", (req, res) => {
-//   const shortURL = req.params.shortURL;
-//   if (urlDatabase[shortURL]) {
-//     let longURL = urlDatabase[shortURL].longURL;
-//     if (longURL === undefined) {
-//       res.status(302);
-//       return;
-//     }
-//     const regex = /^http(s)?:\/\//;
-//     longURL = longURL.match(regex) ? longURL : `http://${longURL}`
-//     res.redirect(longURL);
-//     return;
-//   }
-//   res.status(404).send("ShortURL does not exist");
-// });
+app.get("/u/:id", (req, res) => {
+  const id = req.params.id;
+  let longURL = urlDatabase[id];
+  if (!longURL) {
+    res.send('ShortURL does not exist')
+  }
+  
+  const regex = /^http(s)?:\/\//;
+  longURL = longURL.match(regex) ? longURL : `http://${longURL}`;
+  res.redirect(longURL);
+});
 
 app.post('/urls/:id/delete', (req, res) => {
   delete urlDatabase[req.params.id];

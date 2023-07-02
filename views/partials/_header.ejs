@@ -14,9 +14,10 @@
           <% if (!user) { %>
             <a class="btn btn-success" href="/login" role="button">Login</a>
             <% } else { %>
-              <p>Logged in as <%= user.email %>
-              </p>
-              <a class="btn btn-success" href="/login" role="button">Logout</a>
+              <form method="POST" action="/logout">
+                <label>Logged in as <%= user.email %></label>
+                <button class="btn btn-success" type="submit">Logout</button>
+              </form>
               <% } %>
                 <a class="btn btn-success" href="/register" role="button">Register</a>
         </div>
