@@ -1,5 +1,6 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = 8080;    //default port 8080
 const { getUserByEmail } = require('./email_lookup');
@@ -22,12 +23,12 @@ const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: bcrypt.hashSync("purple-monkey-dinosaur", 10)
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk",
+    password: bcrypt.hashSync("dishwasher-funk", 10)
   },
 };
 
@@ -71,7 +72,7 @@ app.post('/register', (req, res) => {
   let newUser = {
     id: userId,
     email,
-    password
+    password: bcrypt.hashSync(password, 10)
   };
   // add newuser into the users database
   users[userId] = newUser;
@@ -109,7 +110,7 @@ app.post('/login', (req, res) => {
     return res.status(403).send('Please enter valid email');
   }
 
-  if (user.password !== password) {
+  if (!bcrypt.compareSync(password, user.password)) {
     return res.status(403).send('Please enter valid password');
   }
   res.cookie('user_id', user.id);
@@ -155,9 +156,9 @@ app.get("/u/:id", (req, res) => {
   const id = req.params.id;
   let longURL = urlDatabase[id];
   if (!longURL) {
-    res.send('ShortURL does not exist')
+    res.send('ShortURL does not exist');
   }
-  
+
   const regex = /^http(s)?:\/\//;
   longURL = longURL.match(regex) ? longURL : `http://${longURL}`;
   res.redirect(longURL);
