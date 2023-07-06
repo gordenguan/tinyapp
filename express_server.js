@@ -3,7 +3,7 @@ const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = 8080;    //default port 8080
-const { getUserByEmail } = require('./email_lookup');
+const { getUserByEmail, urlsForUser } = require('./helpers');
 
 function generateRandomString() {
   return Math.random().toString(36).substring(2, 8);
@@ -19,8 +19,14 @@ app.use(
 );
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  'b2xVn2': {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "aJ48lW",
+  },
+  '9sm5xK': {
+    longURL: "https://www.google.ca",
+    userID: "userRandomID",
+  },
 };
 
 // create users database
@@ -89,9 +95,12 @@ app.post('/register', (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
+  const userId = req.session.user_id;
+  const userUrls = urlsForUser(userId, urlDatabase);
+
   const templateVars = {
-    urls: urlDatabase,
-    user: users[req.session.user_id] // Pass the entire user object to templateVars
+    urls: userUrls,
+    user: users[req.session.user_id] 
   };
   if (!req.session.user_id) {
     res.redirect('/login');
@@ -131,7 +140,12 @@ app.post('/logout', (req, res) => {
 
 app.post('/urls', (req, res) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+ 
+  urlDatabase[shortURL] = { 
+    longURL: req.body.longURL,
+    userID: req.session.user_id,
+  };
+
   if (!req.session.user_id) {
     res.redirect('/login');
   }
@@ -139,28 +153,50 @@ app.post('/urls', (req, res) => {
 });
 
 app.post("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.newLongURL;
+  const shortURL = req.params.shortURL;
+  const userID = req.session.user_id;
+  const userUrls = urlsForUser(userID, urlDatabase);
+
+  if (!userUrls[shortURL]) {
+    res.status(401).send("Cannot create newURL");
+  }
+
+  urlDatabase[shortURL].longURL  = req.body.newLongURL;
   res.redirect("/urls");
 });
 
 
 app.get('/urls/new', (req, res) => {
-  res.render('urls_new');
+  const userID = req.session.user_id;
+  const templateVars = {
+    user: users[userID]
+  };
+  res.render('urls_new', templateVars);
 });
 
 
 app.get('/urls/:id', (req, res) => {
+  const userID = req.session.user_id;
   const templateVars = {
     id: req.params.id,
-    longURL: urlDatabase[req.params.id],
-    user: users[req.session.user_id]
+    longURL: urlDatabase[req.params.id].longURL,
+    user: users[userID]
   };
+  if (!userID) {
+    res.send('Please login')
+  }
+
+  const userUrls = urlsForUser(userID, urlDatabase); //{}
+  if (!userUrls[req.params.id]) {
+    res.status(401).send("You don't own the URL");
+  }
+
   res.render('urls_show', templateVars);
 });
 
 app.get("/u/:id", (req, res) => {
   const id = req.params.id;
-  let longURL = urlDatabase[id];
+  let longURL = urlDatabase[id].longURL;
   if (!longURL) {
     res.send('ShortURL does not exist');
   }
@@ -171,6 +207,12 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.post('/urls/:id/delete', (req, res) => {
+  const shortURL = req.params.id;
+  const userID = req.session.user_id;
+  const userUrls = urlsForUser(userID, urlDatabase); 
+  if (!userUrls[shortURL]) {
+    res.status(401).send("Cannot delete URL");
+  }
   delete urlDatabase[req.params.id];
   res.redirect('/urls');
 });
